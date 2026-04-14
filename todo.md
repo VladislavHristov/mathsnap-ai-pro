@@ -64,3 +64,6 @@
 
 ## Bugs & Fixes
 - [x] Fix upload image button on Home Screen
+- [x] Fix TinyOCR API error - replaced with Google Vision API
+- [x] Integrate Google Vision API for OCR
+- [x] Enable billing on Google Cloud project

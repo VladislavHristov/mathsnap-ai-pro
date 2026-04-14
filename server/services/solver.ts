@@ -3,7 +3,7 @@
  * Orchestrates the hybrid AI pipeline: OCR → Classification → Solving
  */
 
-import { extractLatexFromImage, extractLatexFromBase64 } from "./tinyocr";
+import { extractTextFromUrl, extractTextFromBase64 } from "./google-vision";
 import { classifyProblem, ProblemClassification } from "./classifier";
 import { solveMathProblem, MathSolution } from "./openai-solver";
 import { solveSymbolic, getPlot, SymbolicSolution } from "./wolfram";
@@ -30,12 +30,12 @@ export interface SolveResponse {
  */
 export async function solveProblem(request: SolveRequest): Promise<SolveResponse> {
   try {
-    // Step 1: Extract LaTeX from image
+    // Step 1: Extract text from image using Google Vision API
     let extracted;
     if (request.image_url) {
-      extracted = await extractLatexFromImage(request.image_url);
+      extracted = await extractTextFromUrl(request.image_url);
     } else if (request.image_base64) {
-      extracted = await extractLatexFromBase64(
+      extracted = await extractTextFromBase64(
         request.image_base64,
         request.mime_type || "image/jpeg"
       );
@@ -103,12 +103,12 @@ export async function classifyOnly(request: SolveRequest): Promise<{
   classification: ProblemClassification;
 }> {
   try {
-    // Extract LaTeX from image
+    // Extract text from image using Google Vision API
     let extracted;
     if (request.image_url) {
-      extracted = await extractLatexFromImage(request.image_url);
+      extracted = await extractTextFromUrl(request.image_url);
     } else if (request.image_base64) {
-      extracted = await extractLatexFromBase64(
+      extracted = await extractTextFromBase64(
         request.image_base64,
         request.mime_type || "image/jpeg"
       );
