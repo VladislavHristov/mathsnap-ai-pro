@@ -1,84 +1,59 @@
 import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
-import { Camera } from "expo-camera";
 import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
-import { useState, useRef, useEffect } from "react";
-import { useColors } from "@/hooks/use-colors";
+import { useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 
 export default function CameraScreen() {
   const router = useRouter();
-  const colors = useColors();
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const cameraRef = useRef<Camera>(null);
 
-  useEffect(() => {
-    (async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasPermission(status === "granted");
-    })();
-  }, []);
-
-  if (hasPermission === null) {
-    return (
-      <ScreenContainer className="flex-1 justify-center items-center">
-        <Text className="text-foreground mb-4">Requesting camera permission...</Text>
-      </ScreenContainer>
-    );
-  }
-
-  if (hasPermission === false) {
-    return (
-      <ScreenContainer className="flex-1 justify-center items-center p-6">
-        <Text className="text-lg font-bold text-foreground mb-4 text-center">
-          Camera Permission Required
-        </Text>
-        <Text className="text-muted text-center mb-6">
-          We need access to your camera to capture math problems
-        </Text>
-        <TouchableOpacity
-          onPress={async () => {
-            const { status } = await Camera.requestCameraPermissionsAsync();
-            setHasPermission(status === "granted");
-          }}
-          className="bg-primary rounded-lg px-6 py-3"
-        >
-          <Text className="text-white font-semibold">Grant Permission</Text>
-        </TouchableOpacity>
-      </ScreenContainer>
-    );
-  }
-
-  const handleCapture = async () => {
-    if (!cameraRef.current) return;
-
+  const handleTakePhoto = async () => {
     setIsLoading(true);
     try {
-      const photo = await cameraRef.current.takePictureAsync({
-        base64: true,
+      const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permissionResult.granted) {
+        alert("Camera permission is required to take photos.");
+        setIsLoading(false);
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: false,
         quality: 0.8,
+        base64: true,
       });
 
-      if (photo?.base64) {
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        const mimeType = asset.uri?.endsWith(".png") ? "image/png" : "image/jpeg";
+
         router.push({
           pathname: "/(tabs)/processing",
           params: {
-            imageBase64: photo.base64,
-            mimeType: "image/jpeg",
+            imageBase64: asset.base64,
+            mimeType: mimeType,
           },
         } as any);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Camera error:", error);
-      alert("Failed to capture image");
+      alert("Failed to take photo: " + (error?.message || "Unknown error"));
     } finally {
       setIsLoading(false);
     }
   };
 
   const handlePickImage = async () => {
+    setIsLoading(true);
     try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        alert("Gallery permission is required to select images.");
+        setIsLoading(false);
+        return;
+      }
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: false,
@@ -88,8 +63,8 @@ export default function CameraScreen() {
 
       if (!result.canceled && result.assets[0]) {
         const asset = result.assets[0];
-        const mimeType = asset.uri?.endsWith('.png') ? 'image/png' : 'image/jpeg';
-        
+        const mimeType = asset.uri?.endsWith(".png") ? "image/png" : "image/jpeg";
+
         router.push({
           pathname: "/(tabs)/processing",
           params: {
@@ -98,9 +73,11 @@ export default function CameraScreen() {
           },
         } as any);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Image picker error:", error);
-      alert("Failed to pick image");
+      alert("Failed to pick image: " + (error?.message || "Unknown error"));
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -109,46 +86,62 @@ export default function CameraScreen() {
   };
 
   return (
-    <ScreenContainer className="flex-1 p-0" edges={["top", "left", "right", "bottom"]}>
-      <Camera ref={cameraRef} className="flex-1" type={0}>
+    <ScreenContainer className="flex-1 p-6">
+      <View className="flex-1 justify-center items-center gap-6">
         {/* Header */}
-        <View className="bg-black bg-opacity-50 px-6 py-4 flex-row justify-between items-center">
-          <TouchableOpacity onPress={handleCancel}>
-            <Text className="text-white text-lg">✕</Text>
-          </TouchableOpacity>
-          <Text className="text-white font-bold">Capture Math Problem</Text>
-          <View style={{ width: 24 }} />
+        <View className="items-center mb-8">
+          <Text className="text-3xl font-bold text-foreground mb-2">
+            Capture Math Problem
+          </Text>
+          <Text className="text-muted text-center">
+            Take a photo or select an image from your gallery
+          </Text>
         </View>
 
-        {/* Bottom Controls */}
-        <View className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 px-6 py-6 flex-row justify-around items-center">
-          <TouchableOpacity
-            onPress={handlePickImage}
-            disabled={isLoading}
-            className="items-center"
-          >
-            <Text className="text-white text-2xl">📁</Text>
-            <Text className="text-white text-xs mt-1">Gallery</Text>
-          </TouchableOpacity>
+        {/* Take Photo Button */}
+        <TouchableOpacity
+          onPress={handleTakePhoto}
+          disabled={isLoading}
+          style={{ opacity: isLoading ? 0.6 : 1 }}
+          className="w-full bg-primary rounded-2xl p-5 items-center"
+        >
+          {isLoading ? (
+            <ActivityIndicator color="white" size="large" />
+          ) : (
+            <>
+              <Text className="text-4xl mb-2">📸</Text>
+              <Text className="text-white text-lg font-bold">Take Photo</Text>
+              <Text className="text-white text-sm opacity-80 mt-1">
+                Use your camera to capture a math problem
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={handleCapture}
-            disabled={isLoading}
-            className="w-16 h-16 rounded-full bg-white items-center justify-center"
-          >
-            {isLoading ? (
-              <ActivityIndicator color="black" />
-            ) : (
-              <View className="w-14 h-14 rounded-full border-2 border-black" />
-            )}
-          </TouchableOpacity>
+        {/* Pick from Gallery Button */}
+        <TouchableOpacity
+          onPress={handlePickImage}
+          disabled={isLoading}
+          style={{ opacity: isLoading ? 0.6 : 1 }}
+          className="w-full bg-surface border border-border rounded-2xl p-5 items-center"
+        >
+          <Text className="text-4xl mb-2">📁</Text>
+          <Text className="text-foreground text-lg font-bold">
+            Choose from Gallery
+          </Text>
+          <Text className="text-muted text-sm mt-1">
+            Select an existing photo of a math problem
+          </Text>
+        </TouchableOpacity>
 
-          <View className="items-center">
-            <Text className="text-white text-2xl">⚙️</Text>
-            <Text className="text-white text-xs mt-1">Settings</Text>
-          </View>
-        </View>
-      </Camera>
+        {/* Cancel Button */}
+        <TouchableOpacity
+          onPress={handleCancel}
+          className="mt-4"
+        >
+          <Text className="text-muted text-base">Cancel</Text>
+        </TouchableOpacity>
+      </View>
     </ScreenContainer>
   );
 }
