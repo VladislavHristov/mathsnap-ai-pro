@@ -59,9 +59,10 @@ export function ScreenContainer({
       <SafeAreaView
         edges={edges}
         className={cn("flex-1", safeAreaClassName)}
-        style={style}
       >
-        <View className={cn("flex-1", className)}>{children}</View>
+        <View className={cn("flex-1", className)} style={style}>
+          {children}
+        </View>
       </SafeAreaView>
     </View>
   );

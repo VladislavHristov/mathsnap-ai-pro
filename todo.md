@@ -68,3 +68,4 @@
 - [x] Integrate Google Vision API for OCR
 - [x] Enable billing on Google Cloud project
 - [x] Update OpenAI solver with improved prompt format for structured solutions
+- [x] Fix React child error in ScreenContainer - objects not valid as React children
