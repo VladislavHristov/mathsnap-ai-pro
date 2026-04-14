@@ -67,7 +67,7 @@ export default function HomeScreen() {
 
       if (!result.canceled && result.assets[0]) {
         const asset = result.assets[0];
-        const mimeType = asset.mimeType || (asset.uri?.endsWith('.png') ? 'image/png' : 'image/jpeg');
+        const mimeType = (asset.uri?.endsWith('.png') ? 'image/png' : 'image/jpeg');
         
         router.push({
           pathname: "/(tabs)/processing",

@@ -1,19 +1,26 @@
 import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
-import { CameraView, useCameraPermissions } from "expo-camera";
+import { Camera } from "expo-camera";
 import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useColors } from "@/hooks/use-colors";
 import * as ImagePicker from "expo-image-picker";
 
 export default function CameraScreen() {
   const router = useRouter();
   const colors = useColors();
-  const [permission, requestPermission] = useCameraPermissions();
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const cameraRef = useRef<CameraView>(null);
+  const cameraRef = useRef<Camera>(null);
 
-  if (!permission) {
+  useEffect(() => {
+    (async () => {
+      const { status } = await Camera.requestCameraPermissionsAsync();
+      setHasPermission(status === "granted");
+    })();
+  }, []);
+
+  if (hasPermission === null) {
     return (
       <ScreenContainer className="flex-1 justify-center items-center">
         <Text className="text-foreground mb-4">Requesting camera permission...</Text>
@@ -21,7 +28,7 @@ export default function CameraScreen() {
     );
   }
 
-  if (!permission.granted) {
+  if (hasPermission === false) {
     return (
       <ScreenContainer className="flex-1 justify-center items-center p-6">
         <Text className="text-lg font-bold text-foreground mb-4 text-center">
@@ -31,7 +38,10 @@ export default function CameraScreen() {
           We need access to your camera to capture math problems
         </Text>
         <TouchableOpacity
-          onPress={requestPermission}
+          onPress={async () => {
+            const { status } = await Camera.requestCameraPermissionsAsync();
+            setHasPermission(status === "granted");
+          }}
           className="bg-primary rounded-lg px-6 py-3"
         >
           <Text className="text-white font-semibold">Grant Permission</Text>
@@ -51,7 +61,6 @@ export default function CameraScreen() {
       });
 
       if (photo?.base64) {
-        // Navigate to processing screen with the image
         router.push({
           pathname: "/(tabs)/processing",
           params: {
@@ -79,11 +88,13 @@ export default function CameraScreen() {
 
       if (!result.canceled && result.assets[0]) {
         const asset = result.assets[0];
+        const mimeType = asset.uri?.endsWith('.png') ? 'image/png' : 'image/jpeg';
+        
         router.push({
           pathname: "/(tabs)/processing",
           params: {
             imageBase64: asset.base64,
-            mimeType: asset.type === "image" ? "image/jpeg" : "image/png",
+            mimeType: mimeType,
           },
         } as any);
       }
@@ -99,7 +110,7 @@ export default function CameraScreen() {
 
   return (
     <ScreenContainer className="flex-1 p-0" edges={["top", "left", "right", "bottom"]}>
-      <CameraView ref={cameraRef} className="flex-1">
+      <Camera ref={cameraRef} className="flex-1" type={0}>
         {/* Header */}
         <View className="bg-black bg-opacity-50 px-6 py-4 flex-row justify-between items-center">
           <TouchableOpacity onPress={handleCancel}>
@@ -137,7 +148,7 @@ export default function CameraScreen() {
             <Text className="text-white text-xs mt-1">Settings</Text>
           </View>
         </View>
-      </CameraView>
+      </Camera>
     </ScreenContainer>
   );
 }

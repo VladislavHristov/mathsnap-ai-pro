@@ -71,3 +71,4 @@
 - [x] Fix React child error in ScreenContainer - objects not valid as React children
 - [x] Fix image picker error on Android - added permissions and error handling
 - [x] Fix APK build error - updated compileSdkVersion to 36
+- [x] Fix expo-image-picker Kotlin error - downgraded to version 14.1.1 compatible with Expo 54
