@@ -61,3 +61,6 @@
 - [ ] Test dark mode across all screens
 - [ ] Create checkpoint and prepare for publish
 
+
+## Bugs & Fixes
+- [x] Fix upload image button on Home Screen

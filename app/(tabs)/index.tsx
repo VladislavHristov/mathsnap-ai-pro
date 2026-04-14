@@ -4,6 +4,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { useState, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as ImagePicker from "expo-image-picker";
 
 interface RecentProblem {
   id: string;
@@ -47,6 +48,31 @@ export default function HomeScreen() {
     router.push("/(tabs)/camera" as any);
   };
 
+  const handleUploadImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false,
+        quality: 0.8,
+        base64: true,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        router.push({
+          pathname: "/(tabs)/processing",
+          params: {
+            imageBase64: asset.base64,
+            mimeType: asset.type === "image" ? "image/jpeg" : "image/png",
+          },
+        } as any);
+      }
+    } catch (error) {
+      console.error("Image picker error:", error);
+      alert("Failed to pick image");
+    }
+  };
+
   const handleViewProblem = (problemId: string) => {
     router.push(`/(tabs)/solution/${problemId}` as any);
   };
@@ -87,7 +113,10 @@ export default function HomeScreen() {
           </TouchableOpacity>
 
           {/* Secondary Action */}
-          <TouchableOpacity className="bg-surface border border-border rounded-2xl py-4 px-6 active:opacity-70">
+          <TouchableOpacity
+            onPress={handleUploadImage}
+            className="bg-surface border border-border rounded-2xl py-4 px-6 active:opacity-70"
+          >
             <Text className="text-foreground text-center font-semibold">
               📁 Upload Image
             </Text>
