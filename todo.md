@@ -69,3 +69,4 @@
 - [x] Enable billing on Google Cloud project
 - [x] Update OpenAI solver with improved prompt format for structured solutions
 - [x] Fix React child error in ScreenContainer - objects not valid as React children
+- [x] Fix image picker error on Android - added permissions and error handling

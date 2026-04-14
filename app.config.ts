@@ -64,7 +64,7 @@ const config: ExpoConfig = {
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
     package: env.androidPackage,
-    permissions: ["POST_NOTIFICATIONS"],
+    permissions: ["POST_NOTIFICATIONS", "READ_EXTERNAL_STORAGE", "READ_MEDIA_IMAGES"],
     intentFilters: [
       {
         action: "VIEW",
@@ -117,6 +117,7 @@ const config: ExpoConfig = {
         android: {
           buildArchs: ["armeabi-v7a", "arm64-v8a"],
           minSdkVersion: 24,
+          compileSdkVersion: 34,
         },
       },
     ],

@@ -50,26 +50,37 @@ export default function HomeScreen() {
 
   const handleUploadImage = async () => {
     try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (!permissionResult.granted) {
+        alert("Permission to access media library is required");
+        return;
+      }
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: false,
         quality: 0.8,
         base64: true,
+        exif: false,
       });
 
       if (!result.canceled && result.assets[0]) {
         const asset = result.assets[0];
+        const mimeType = asset.mimeType || (asset.uri?.endsWith('.png') ? 'image/png' : 'image/jpeg');
+        
         router.push({
           pathname: "/(tabs)/processing",
           params: {
             imageBase64: asset.base64,
-            mimeType: asset.type === "image" ? "image/jpeg" : "image/png",
+            mimeType: mimeType,
           },
         } as any);
       }
     } catch (error) {
       console.error("Image picker error:", error);
-      alert("Failed to pick image");
+      const errorMsg = error instanceof Error ? error.message : "Unknown error";
+      alert("Failed to pick image: " + errorMsg);
     }
   };
 
