@@ -75,3 +75,4 @@
 - [x] Fix Gradle build error - added Kotlin version and build properties
 - [x] Fix Kotlin version error - updated to Kotlin 2.0.0
 - [x] Remove expo-camera (incompatible with build) and use expo-image-picker for both camera and gallery
+- [x] Fix expo-image-loader Gradle build error - upgraded expo-image-picker to ~17.0.10 (SDK 54 compatible)
