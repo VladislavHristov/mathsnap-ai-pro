@@ -67,3 +67,4 @@
 - [x] Fix TinyOCR API error - replaced with Google Vision API
 - [x] Integrate Google Vision API for OCR
 - [x] Enable billing on Google Cloud project
+- [x] Update OpenAI solver with improved prompt format for structured solutions
