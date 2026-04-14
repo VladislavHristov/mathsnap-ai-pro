@@ -73,3 +73,4 @@
 - [x] Fix APK build error - updated compileSdkVersion to 36
 - [x] Fix expo-image-picker Kotlin error - downgraded to version 14.1.1 compatible with Expo 54
 - [x] Fix Gradle build error - added Kotlin version and build properties
+- [x] Fix Kotlin version error - updated to Kotlin 2.0.0
