@@ -3,81 +3,75 @@ import { useRouter } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { useState } from "react";
 import * as ImagePicker from "expo-image-picker";
+import { processImageForOCR, setPendingImage } from "@/lib/image-utils";
 
 export default function CameraScreen() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [statusText, setStatusText] = useState("");
 
   const handleTakePhoto = async () => {
+    if (isLoading) return;
     setIsLoading(true);
+    setStatusText("Opening camera...");
     try {
       const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
       if (!permissionResult.granted) {
         alert("Camera permission is required to take photos.");
-        setIsLoading(false);
         return;
       }
 
       const result = await ImagePicker.launchCameraAsync({
         allowsEditing: false,
-        quality: 0.8,
-        base64: true,
+        quality: 0.5,
+        base64: false, // Don't request base64 — we compress separately
       });
 
       if (!result.canceled && result.assets[0]) {
-        const asset = result.assets[0];
-        const mimeType = asset.uri?.endsWith(".png") ? "image/png" : "image/jpeg";
-
-        router.push({
-          pathname: "/(tabs)/processing",
-          params: {
-            imageBase64: asset.base64,
-            mimeType: mimeType,
-          },
-        } as any);
+        setStatusText("Compressing image...");
+        const imageData = await processImageForOCR(result.assets[0].uri);
+        setPendingImage(imageData);
+        router.push("/(tabs)/processing" as any);
       }
     } catch (error: any) {
       console.error("Camera error:", error);
       alert("Failed to take photo: " + (error?.message || "Unknown error"));
     } finally {
       setIsLoading(false);
+      setStatusText("");
     }
   };
 
   const handlePickImage = async () => {
+    if (isLoading) return;
     setIsLoading(true);
+    setStatusText("Opening gallery...");
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
         alert("Gallery permission is required to select images.");
-        setIsLoading(false);
         return;
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: false,
-        quality: 0.8,
-        base64: true,
+        quality: 0.5,
+        base64: false, // Don't request base64 — we compress separately
       });
 
       if (!result.canceled && result.assets[0]) {
-        const asset = result.assets[0];
-        const mimeType = asset.uri?.endsWith(".png") ? "image/png" : "image/jpeg";
-
-        router.push({
-          pathname: "/(tabs)/processing",
-          params: {
-            imageBase64: asset.base64,
-            mimeType: mimeType,
-          },
-        } as any);
+        setStatusText("Compressing image...");
+        const imageData = await processImageForOCR(result.assets[0].uri);
+        setPendingImage(imageData);
+        router.push("/(tabs)/processing" as any);
       }
     } catch (error: any) {
       console.error("Image picker error:", error);
       alert("Failed to pick image: " + (error?.message || "Unknown error"));
     } finally {
       setIsLoading(false);
+      setStatusText("");
     }
   };
 
@@ -98,31 +92,33 @@ export default function CameraScreen() {
           </Text>
         </View>
 
+        {/* Loading State */}
+        {isLoading && (
+          <View className="items-center gap-3 mb-4">
+            <ActivityIndicator size="large" color="#0A7EA4" />
+            <Text className="text-muted text-sm">{statusText}</Text>
+          </View>
+        )}
+
         {/* Take Photo Button */}
         <TouchableOpacity
           onPress={handleTakePhoto}
           disabled={isLoading}
-          style={{ opacity: isLoading ? 0.6 : 1 }}
+          style={{ opacity: isLoading ? 0.5 : 1 }}
           className="w-full bg-primary rounded-2xl p-5 items-center"
         >
-          {isLoading ? (
-            <ActivityIndicator color="white" size="large" />
-          ) : (
-            <>
-              <Text className="text-4xl mb-2">📸</Text>
-              <Text className="text-white text-lg font-bold">Take Photo</Text>
-              <Text className="text-white text-sm opacity-80 mt-1">
-                Use your camera to capture a math problem
-              </Text>
-            </>
-          )}
+          <Text className="text-4xl mb-2">📸</Text>
+          <Text className="text-white text-lg font-bold">Take Photo</Text>
+          <Text className="text-white text-sm opacity-80 mt-1">
+            Use your camera to capture a math problem
+          </Text>
         </TouchableOpacity>
 
         {/* Pick from Gallery Button */}
         <TouchableOpacity
           onPress={handlePickImage}
           disabled={isLoading}
-          style={{ opacity: isLoading ? 0.6 : 1 }}
+          style={{ opacity: isLoading ? 0.5 : 1 }}
           className="w-full bg-surface border border-border rounded-2xl p-5 items-center"
         >
           <Text className="text-4xl mb-2">📁</Text>
@@ -137,6 +133,7 @@ export default function CameraScreen() {
         {/* Cancel Button */}
         <TouchableOpacity
           onPress={handleCancel}
+          disabled={isLoading}
           className="mt-4"
         >
           <Text className="text-muted text-base">Cancel</Text>

@@ -1,10 +1,10 @@
-import { ScrollView, Text, View, TouchableOpacity, FlatList } from "react-native";
+import { ScrollView, Text, View, TouchableOpacity, FlatList, ActivityIndicator } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
-import { useColors } from "@/hooks/use-colors";
 import { useState, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
+import { processImageForOCR, setPendingImage } from "@/lib/image-utils";
 
 interface RecentProblem {
   id: string;
@@ -15,9 +15,9 @@ interface RecentProblem {
 
 export default function HomeScreen() {
   const router = useRouter();
-  const colors = useColors();
   const [recentProblems, setRecentProblems] = useState<RecentProblem[]>([]);
   const [solvedToday, setSolvedToday] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -32,7 +32,6 @@ export default function HomeScreen() {
         const problems = JSON.parse(history) as RecentProblem[];
         setRecentProblems(problems.slice(0, 3));
 
-        // Count problems solved today
         const today = new Date().toDateString();
         const todayCount = problems.filter(
           (p) => new Date(p.date).toDateString() === today
@@ -49,9 +48,10 @@ export default function HomeScreen() {
   };
 
   const handleUploadImage = async () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
       if (!permissionResult.granted) {
         alert("Permission to access media library is required");
         return;
@@ -60,27 +60,29 @@ export default function HomeScreen() {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: false,
-        quality: 0.8,
-        base64: true,
+        quality: 0.5,
+        base64: false, // Don't request base64 from picker — we compress separately
         exif: false,
       });
 
       if (!result.canceled && result.assets[0]) {
         const asset = result.assets[0];
-        const mimeType = (asset.uri?.endsWith('.png') ? 'image/png' : 'image/jpeg');
-        
-        router.push({
-          pathname: "/(tabs)/processing",
-          params: {
-            imageBase64: asset.base64,
-            mimeType: mimeType,
-          },
-        } as any);
+
+        // Compress and convert to base64 in background
+        const imageData = await processImageForOCR(asset.uri);
+
+        // Store in module-level cache instead of route params
+        setPendingImage(imageData);
+
+        // Navigate to processing screen (no large data in params)
+        router.push("/(tabs)/processing" as any);
       }
     } catch (error) {
       console.error("Image picker error:", error);
       const errorMsg = error instanceof Error ? error.message : "Unknown error";
       alert("Failed to pick image: " + errorMsg);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -116,6 +118,8 @@ export default function HomeScreen() {
           {/* Primary Action */}
           <TouchableOpacity
             onPress={handleTakePhoto}
+            disabled={isProcessing}
+            style={{ opacity: isProcessing ? 0.6 : 1 }}
             className="bg-primary rounded-2xl py-6 px-6 active:opacity-80"
           >
             <Text className="text-white text-center font-bold text-lg">
@@ -126,11 +130,22 @@ export default function HomeScreen() {
           {/* Secondary Action */}
           <TouchableOpacity
             onPress={handleUploadImage}
+            disabled={isProcessing}
+            style={{ opacity: isProcessing ? 0.6 : 1 }}
             className="bg-surface border border-border rounded-2xl py-4 px-6 active:opacity-70"
           >
-            <Text className="text-foreground text-center font-semibold">
-              📁 Upload Image
-            </Text>
+            {isProcessing ? (
+              <View className="flex-row items-center justify-center gap-2">
+                <ActivityIndicator size="small" color="#0A7EA4" />
+                <Text className="text-foreground font-semibold">
+                  Compressing image...
+                </Text>
+              </View>
+            ) : (
+              <Text className="text-foreground text-center font-semibold">
+                📁 Upload Image
+              </Text>
+            )}
           </TouchableOpacity>
 
           {/* Recent Problems */}

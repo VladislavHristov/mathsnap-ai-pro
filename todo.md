@@ -76,3 +76,7 @@
 - [x] Fix Kotlin version error - updated to Kotlin 2.0.0
 - [x] Remove expo-camera (incompatible with build) and use expo-image-picker for both camera and gallery
 - [x] Fix expo-image-loader Gradle build error - upgraded expo-image-picker to ~17.0.10 (SDK 54 compatible)
+- [x] Fix app freezing when uploading/capturing images - optimize image pipeline
+- [x] Stop passing large base64 through route params (uses module-level cache)
+- [x] Use module-level cache instead of route params for image transfer
+- [x] Compress images before processing (resize to 1024px, 60% JPEG quality)
