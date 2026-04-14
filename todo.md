@@ -70,3 +70,4 @@
 - [x] Update OpenAI solver with improved prompt format for structured solutions
 - [x] Fix React child error in ScreenContainer - objects not valid as React children
 - [x] Fix image picker error on Android - added permissions and error handling
+- [x] Fix APK build error - updated compileSdkVersion to 36
