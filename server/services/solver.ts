@@ -1,0 +1,144 @@
+/**
+ * Main Solver Service
+ * Orchestrates the hybrid AI pipeline: OCR → Classification → Solving
+ */
+
+import { extractLatexFromImage, extractLatexFromBase64 } from "./tinyocr";
+import { classifyProblem, ProblemClassification } from "./classifier";
+import { solveMathProblem, MathSolution } from "./openai-solver";
+import { solveSymbolic, getPlot, SymbolicSolution } from "./wolfram";
+
+export interface SolveRequest {
+  image_url?: string;
+  image_base64?: string;
+  mime_type?: string;
+}
+
+export interface SolveResponse {
+  extracted: {
+    latex: string;
+    text: string;
+  };
+  classification: ProblemClassification;
+  solution: MathSolution | SymbolicSolution;
+  graph_url?: string;
+  solver_used: "openai" | "wolfram";
+}
+
+/**
+ * Main solve function - orchestrates the entire pipeline
+ */
+export async function solveProblem(request: SolveRequest): Promise<SolveResponse> {
+  try {
+    // Step 1: Extract LaTeX from image
+    let extracted;
+    if (request.image_url) {
+      extracted = await extractLatexFromImage(request.image_url);
+    } else if (request.image_base64) {
+      extracted = await extractLatexFromBase64(
+        request.image_base64,
+        request.mime_type || "image/jpeg"
+      );
+    } else {
+      throw new Error("No image provided");
+    }
+
+    console.log("Extracted:", extracted);
+
+    // Step 2: Classify the problem
+    const classification = await classifyProblem(extracted.latex, extracted.text);
+    console.log("Classification:", classification);
+
+    // Step 3: Decide solver based on classification
+    let solution: MathSolution | SymbolicSolution;
+    let solverUsed: "openai" | "wolfram" = "openai";
+    let graphUrl: string | undefined;
+
+    if (classification.requires_symbolic_solver) {
+      // Use Wolfram Alpha for symbolic solving
+      try {
+        solution = await solveSymbolic(extracted.latex, extracted.text);
+        solverUsed = "wolfram";
+
+        // Get graph if available
+        if (classification.requires_graph) {
+          try {
+            const plot = await getPlot(extracted.latex);
+            graphUrl = plot.url;
+          } catch (e) {
+            console.warn("Could not fetch graph:", e);
+          }
+        }
+      } catch (wolframError) {
+        console.warn("Wolfram solving failed, falling back to OpenAI:", wolframError);
+        solution = await solveMathProblem(extracted.latex, extracted.text);
+        solverUsed = "openai";
+      }
+    } else {
+      // Use OpenAI for step-by-step explanation
+      solution = await solveMathProblem(extracted.latex, extracted.text);
+      solverUsed = "openai";
+    }
+
+    console.log("Solution:", solution);
+
+    return {
+      extracted,
+      classification,
+      solution,
+      graph_url: graphUrl,
+      solver_used: solverUsed,
+    };
+  } catch (error) {
+    console.error("Solve error:", error);
+    throw error;
+  }
+}
+
+/**
+ * Classify a problem without solving
+ */
+export async function classifyOnly(request: SolveRequest): Promise<{
+  extracted: { latex: string; text: string };
+  classification: ProblemClassification;
+}> {
+  try {
+    // Extract LaTeX from image
+    let extracted;
+    if (request.image_url) {
+      extracted = await extractLatexFromImage(request.image_url);
+    } else if (request.image_base64) {
+      extracted = await extractLatexFromBase64(
+        request.image_base64,
+        request.mime_type || "image/jpeg"
+      );
+    } else {
+      throw new Error("No image provided");
+    }
+
+    // Classify the problem
+    const classification = await classifyProblem(extracted.latex, extracted.text);
+
+    return {
+      extracted,
+      classification,
+    };
+  } catch (error) {
+    console.error("Classification error:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get a graph for a problem
+ */
+export async function getGraphForProblem(
+  problemLatex: string
+): Promise<{ url: string; title: string }> {
+  try {
+    return await getPlot(problemLatex);
+  } catch (error) {
+    console.error("Graph error:", error);
+    throw error;
+  }
+}

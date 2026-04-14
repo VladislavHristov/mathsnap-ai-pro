@@ -1,0 +1,63 @@
+# MathSnap AI Pro — Project TODO
+
+## Phase 1: Project Setup & Branding
+- [x] Generate custom app logo and update branding
+- [x] Update app.config.ts with app name and logo URL
+- [x] Configure theme colors in theme.config.js
+
+## Phase 2: Backend API Services
+- [x] Set up backend project structure (services folder)
+- [x] Implement TinyOCR service (extract LaTeX from images)
+- [x] Implement OpenAI classification service (problem type, difficulty, requires_graph, requires_symbolic_solver)
+- [x] Implement Wolfram Alpha solver service (for symbolic/complex math)
+- [x] Implement OpenAI solver service (for general math and explanations)
+- [x] Implement classifier service (decision engine)
+- [x] Create /solve endpoint (main API route)
+- [x] Create /classify endpoint
+- [x] Create /graph endpoint
+- [x] Set up environment variables (TINYOCR_API_KEY, OPENAI_API_KEY, WOLFRAM_APP_ID)
+- [x] Add error handling and validation
+
+## Phase 3: Mobile App UI Screens
+- [x] Create Home Screen with quick actions and recent problems
+- [x] Create Camera Screen with photo capture and upload
+- [x] Create Processing Screen (image to backend)
+- [x] Create Solution Steps Screen (step-by-step explanation in Bulgarian)
+- [x] Create History Screen (list of solved problems)
+- [x] Create Favorites Screen (saved problems)
+- [x] Create Settings Screen (dark mode, language, cache clear)
+- [x] Set up tab navigation structure
+
+## Phase 4: Mobile App Integration
+- [x] Connect Camera Screen to backend /solve endpoint
+- [x] Implement image upload and processing
+- [x] Display extracted problem on Problem Detail Screen
+- [x] Display classification badge and difficulty
+- [x] Display solution steps in Bulgarian
+- [x] Add loading states and error handling
+
+## Phase 5: Data Persistence & Features
+- [x] Implement local storage for problem history (AsyncStorage)
+- [x] Implement favorites system
+- [x] Implement dark mode toggle
+- [x] Add language selection (Bulgarian/English)
+- [x] Implement cache clearing
+
+## Phase 6: Polish & Optimization
+- [x] Add haptic feedback to interactions
+- [x] Implement smooth transitions and animations
+- [x] Optimize image compression before upload
+- [x] Add pull-to-refresh on History Screen
+- [x] Implement search/filter on History Screen
+- [x] Test end-to-end user flows
+- [x] Verify Bulgarian language output
+- [x] Test on iOS and Android (Expo Go)
+
+## Phase 7: Testing & Deployment
+- [ ] Write unit tests for backend services
+- [ ] Write integration tests for API endpoints
+- [ ] Test with real Mathpix, OpenAI, and Wolfram Alpha APIs
+- [ ] Verify graph rendering accuracy
+- [ ] Test dark mode across all screens
+- [ ] Create checkpoint and prepare for publish
+
