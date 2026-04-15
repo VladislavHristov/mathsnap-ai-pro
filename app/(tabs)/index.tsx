@@ -67,15 +67,11 @@ export default function HomeScreen() {
 
       if (!result.canceled && result.assets[0]) {
         const asset = result.assets[0];
-
-        // Compress and convert to base64 in background
-        const imageData = await processImageForOCR(asset.uri);
-
-        // Store in module-level cache instead of route params
-        setPendingImage(imageData);
-
-        // Navigate to processing screen (no large data in params)
-        router.push("/(tabs)/processing" as any);
+        // Route to crop screen with image URI
+        router.push({
+          pathname: "/(tabs)/crop/[uri]",
+          params: { uri: asset.uri },
+        } as any);
       }
     } catch (error) {
       console.error("Image picker error:", error);

@@ -28,10 +28,11 @@ export default function CameraScreen() {
       });
 
       if (!result.canceled && result.assets[0]) {
-        setStatusText("Compressing image...");
-        const imageData = await processImageForOCR(result.assets[0].uri);
-        setPendingImage(imageData);
-        router.push("/(tabs)/processing" as any);
+        // Route to crop screen with image URI
+        router.push({
+          pathname: "/(tabs)/crop/[uri]",
+          params: { uri: result.assets[0].uri },
+        } as any);
       }
     } catch (error: any) {
       console.error("Camera error:", error);
@@ -61,10 +62,11 @@ export default function CameraScreen() {
       });
 
       if (!result.canceled && result.assets[0]) {
-        setStatusText("Compressing image...");
-        const imageData = await processImageForOCR(result.assets[0].uri);
-        setPendingImage(imageData);
-        router.push("/(tabs)/processing" as any);
+        // Route to crop screen with image URI
+        router.push({
+          pathname: "/(tabs)/crop/[uri]",
+          params: { uri: result.assets[0].uri },
+        } as any);
       }
     } catch (error: any) {
       console.error("Image picker error:", error);

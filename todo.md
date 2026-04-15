@@ -81,3 +81,4 @@
 - [x] Use module-level cache instead of route params for image transfer
 - [x] Compress images before processing (resize to 1024px, 60% JPEG quality)
 - [x] Create README.md file with Bulgarian description and features
+- [x] Add image cropping feature after camera/upload - users can preview and confirm before processing
