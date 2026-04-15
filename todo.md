@@ -80,3 +80,4 @@
 - [x] Stop passing large base64 through route params (uses module-level cache)
 - [x] Use module-level cache instead of route params for image transfer
 - [x] Compress images before processing (resize to 1024px, 60% JPEG quality)
+- [x] Create README.md file with Bulgarian description and features
