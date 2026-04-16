@@ -3,7 +3,8 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { useState, useEffect } from "react";
 import * as ImageManipulator from "expo-image-manipulator";
-import { setPendingImage } from "@/lib/image-utils";
+import * as FileSystem from "expo-file-system";
+import { setPendingImage, processImageForOCR } from "@/lib/image-utils";
 
 export default function CropScreen() {
   const router = useRouter();
@@ -24,34 +25,17 @@ export default function CropScreen() {
     
     setIsProcessing(true);
     try {
-      // Compress and resize the image
-      const result = await ImageManipulator.manipulateAsync(
-        uri,
-        [{ resize: { width: 1024, height: 1024 } }],
-        { compress: 0.6, format: ImageManipulator.SaveFormat.JPEG }
-      );
-
-      // Convert to base64
-      const response = await fetch(result.uri);
-      const blob = await response.blob();
-      const reader = new FileReader();
+      // Use the existing image processing utility which handles compression and base64 conversion
+      const imageData = await processImageForOCR(uri);
       
-      reader.onload = async () => {
-        const base64 = reader.result as string;
-        const base64Data = base64.split(",")[1];
-        
-        setPendingImage({
-          base64: base64Data,
-          mimeType: "image/jpeg",
-        });
+      // Store in module-level cache
+      setPendingImage(imageData);
 
-        router.replace("/(tabs)/processing" as any);
-      };
-
-      reader.readAsDataURL(blob);
+      // Navigate to processing screen
+      router.replace("/(tabs)/processing" as any);
     } catch (error) {
       console.error("Crop error:", error);
-      alert("Failed to crop image: " + (error instanceof Error ? error.message : "Unknown error"));
+      alert("Failed to process image: " + (error instanceof Error ? error.message : "Unknown error"));
       setIsProcessing(false);
     }
   };
@@ -117,7 +101,10 @@ export default function CropScreen() {
             className="bg-primary rounded-xl p-4 items-center"
           >
             {isProcessing ? (
-              <ActivityIndicator size="small" color="white" />
+              <View className="flex-row items-center gap-2">
+                <ActivityIndicator size="small" color="white" />
+                <Text className="text-white font-semibold text-sm">Обработка...</Text>
+              </View>
             ) : (
               <Text className="text-white font-bold text-base">
                 ✓ Продължи с тази снимка
