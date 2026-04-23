@@ -1,9 +1,10 @@
 /**
  * OpenAI Solver Service
  * Solves math problems step-by-step with Bulgarian language explanations
+ * Direct OpenAI API integration for better performance
  */
 
-import { invokeLLM } from "../_core/llm";
+import { solveWithOpenAI, invokeOpenAI } from "./openai-llm";
 
 export interface MathSolution {
   problem: string;
@@ -47,29 +48,7 @@ export async function solveMathProblem(
 
     const prompt = bulgariaSolverPrompt.replace("{{LATEX_FROM_OCR}}", problemInput);
 
-    const response = await invokeLLM({
-      messages: [
-        {
-          role: "system",
-          content:
-            "Ти си професионален учител по математика. Реши задачи стъпка по стъпка с ясни логични стъпки, прости обяснения и всички формули. Не пропускай стъпки. Върни САМО валиден JSON. Всички отговори трябва да са на BULGARIAN език.",
-        },
-        {
-          role: "user",
-          content: [{ type: "text", text: prompt }],
-        },
-      ],
-      response_format: {
-        type: "json_object",
-      },
-    });
-
-    const content = response.choices[0].message.content;
-    if (!content || typeof content !== "string") {
-      throw new Error("No response from OpenAI");
-    }
-
-    const solution = JSON.parse(content) as MathSolution;
+    const solution = await solveWithOpenAI(prompt) as MathSolution;
 
     // Validate the response structure
     if (!solution.problem || !Array.isArray(solution.steps) || !solution.final_answer) {
@@ -94,7 +73,8 @@ export async function explainStep(
   try {
     const stepsContext = previousSteps.map((s, i) => `${i + 1}. ${s}`).join("\n");
 
-    const response = await invokeLLM({
+    const response = await invokeOpenAI({
+      model: "gpt-4o",
       messages: [
         {
           role: "system",
@@ -103,14 +83,11 @@ export async function explainStep(
         },
         {
           role: "user",
-          content: [
-            {
-              type: "text",
-              text: `Задача: ${problemLatex}\n\nПредишни стъпки:\n${stepsContext}\n\nОбясни стъпка ${stepNumber + 1} подробно.`,
-            },
-          ],
+          content: `Задача: ${problemLatex}\n\nПредишни стъпки:\n${stepsContext}\n\nОбясни стъпка ${stepNumber + 1} подробно.`,
         },
       ],
+      temperature: 0.6,
+      max_tokens: 1000,
     });
 
     const content = response.choices[0].message.content;

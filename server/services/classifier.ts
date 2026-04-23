@@ -3,7 +3,7 @@
  * Classifies math problems by type, difficulty, and requirements
  */
 
-import { invokeLLM } from "../_core/llm";
+import { classifyWithOpenAI } from "./openai-llm";
 
 export interface ProblemClassification {
   type: "algebra" | "calculus" | "geometry" | "trigonometry" | "statistics" | "other";
@@ -46,29 +46,7 @@ export async function classifyProblem(
 
     const prompt = classificationPrompt.replace("{{PROBLEM}}", problemInput);
 
-    const response = await invokeLLM({
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a mathematics expert. Classify math problems accurately and return valid JSON only.",
-        },
-        {
-          role: "user",
-          content: [{ type: "text", text: prompt }],
-        },
-      ],
-      response_format: {
-        type: "json_object",
-      },
-    });
-
-    const content = response.choices[0].message.content;
-    if (!content || typeof content !== "string") {
-      throw new Error("No response from OpenAI");
-    }
-
-    const classification = JSON.parse(content) as ProblemClassification;
+    const classification = await classifyWithOpenAI(prompt) as ProblemClassification;
 
     // Validate the response structure
     if (
@@ -94,29 +72,8 @@ export async function quickClassify(
   problemLatex: string
 ): Promise<{ type: string; requires_symbolic_solver: boolean }> {
   try {
-    const response = await invokeLLM({
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a mathematics expert. Respond with ONLY a JSON object: {\"type\": \"algebra|calculus|geometry|trigonometry|statistics|other\", \"requires_symbolic_solver\": true/false}",
-        },
-        {
-          role: "user",
-          content: [{ type: "text", text: `Classify this math problem: ${problemLatex}` }],
-        },
-      ],
-      response_format: {
-        type: "json_object",
-      },
-    });
-
-    const content = response.choices[0].message.content;
-    if (!content || typeof content !== "string") {
-      throw new Error("No response from OpenAI");
-    }
-
-    return JSON.parse(content);
+    const prompt = `Classify this math problem: ${problemLatex}. Return JSON: {"type": "algebra|calculus|geometry|trigonometry|statistics|other", "requires_symbolic_solver": true/false}`;
+    return await classifyWithOpenAI(prompt);
   } catch (error) {
     console.error("Quick classification error:", error);
     throw error;

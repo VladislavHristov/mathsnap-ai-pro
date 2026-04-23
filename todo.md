@@ -83,3 +83,12 @@
 - [x] Create README.md file with Bulgarian description and features
 - [x] Add image cropping feature after camera/upload - users can preview and confirm before processing
 - [x] Fix crop screen - replaced FileReader with React Native file handling
+
+## OpenAI Integration (Performance Upgrade)
+- [x] Replace Forge/Gemini with direct OpenAI API
+- [x] Update classifier service to use OpenAI (GPT-4o)
+- [x] Update solver service to use OpenAI (GPT-4o)
+- [x] Set OPENAI_API_KEY environment variable
+- [x] Test classification performance
+- [x] Test solving performance
+- [x] Compare results quality with previous implementation
