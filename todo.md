@@ -102,3 +102,16 @@
 - [x] Verified solution accuracy: x = 3, x = -3, x = 1, x = -1 ✓
 - [x] All steps include verification by substitution back into original equation
 - [x] Bulgarian language output with clear step-by-step explanations
+
+
+## Enhanced Solver Implementation (April 23, 2026)
+- [x] Create comprehensive enhanced-solver.ts with textbook-based methods
+- [x] Implement type-specific solving strategies (quadratic, biquadratic, rational, irrational)
+- [x] Add verification layer with substitution checking
+- [x] Implement re-solving mechanism if verification fails
+- [x] Add support for all 8th grade problem types from textbook
+- [x] Integrate enhanced-solver into main API endpoint
+- [x] Create test suite for enhanced solver with textbook examples
+- [x] Verify accuracy of all solution types
+- [x] Update solver.ts to use enhanced solver as default for OpenAI
+- [x] Add fallback from Wolfram to Enhanced OpenAI solver

@@ -6,6 +6,7 @@
 import { extractTextFromUrl, extractTextFromBase64 } from "./google-vision";
 import { classifyProblem, ProblemClassification } from "./classifier";
 import { solveMathProblem, MathSolution } from "./openai-solver";
+import { solveWithVerification } from "./enhanced-solver";
 import { solveSymbolic, getPlot, SymbolicSolution } from "./wolfram";
 
 export interface SolveRequest {
@@ -70,6 +71,8 @@ export async function solveProblem(request: SolveRequest): Promise<SolveResponse
     // Force Wolfram for high-degree polynomials (degree >= 3)
     const forceWolfram = isHighDegreePolynomial(extracted.latex, extracted.text);
     const useWolfram = classification.requires_symbolic_solver || forceWolfram;
+    
+    console.log(`Using ${useWolfram ? "Wolfram" : "Enhanced OpenAI"} solver for: ${extracted.text}`);
 
     if (useWolfram) {
       // Use Wolfram Alpha for symbolic solving
@@ -87,18 +90,17 @@ export async function solveProblem(request: SolveRequest): Promise<SolveResponse
           }
         }
       } catch (wolframError) {
-        console.warn("Wolfram solving failed, falling back to OpenAI:", wolframError);
-        solution = await solveMathProblem(extracted.latex, extracted.text);
+        console.warn("Wolfram solving failed, falling back to Enhanced OpenAI:", wolframError);
+        solution = await solveWithVerification(extracted.latex, extracted.text);
         solverUsed = "openai";
       }
     } else {
-      // Use OpenAI for step-by-step explanation
-      solution = await solveMathProblem(extracted.latex, extracted.text);
+      // Use enhanced OpenAI solver with verification
+      solution = await solveWithVerification(extracted.latex, extracted.text);
       solverUsed = "openai";
     }
 
-    console.log("Solution:", solution);
-
+    // Return response
     return {
       extracted,
       classification,
