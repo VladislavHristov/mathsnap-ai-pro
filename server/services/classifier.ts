@@ -28,7 +28,7 @@ Guidelines:
 - "type": Classify the primary mathematical domain
 - "difficulty": Based on complexity and required knowledge
 - "requires_graph": true if visualizing a function/graph would help understand the solution
-- "requires_symbolic_solver": true if the problem requires symbolic computation (Wolfram Alpha), false if it can be solved with step-by-step explanation
+- "requires_symbolic_solver": ALWAYS true for polynomial equations of degree >= 3 (cubic, quartic, etc.), equations with multiple variables, systems of equations, transcendental equations, or any equation requiring exact symbolic solutions. ONLY false for simple linear/quadratic equations.
 - "description": 1-2 sentence summary of what the problem is asking
 
 Problem:

@@ -26,6 +26,19 @@ export interface SolveResponse {
 }
 
 /**
+ * Detect if a problem is a polynomial equation of degree >= 3
+ * This ensures high-degree polynomials are always sent to Wolfram Alpha for accuracy
+ */
+function isHighDegreePolynomial(latex: string, text: string): boolean {
+  const combined = (latex + " " + text).toLowerCase();
+  // Check for patterns like x^4, x^3, x^5, etc. (both ^ and \^)
+  const highDegreePattern = /x[\^\\^][3-9]|x[\^\\^]\d{2,}|x\*\*[3-9]|x\*\*\d{2,}/;
+  // Check for biquadratic pattern (ax^4 + bx^2 + c = 0)
+  const biquadraticPattern = /(x[\^\\^]4|x\*\*4).*(x[\^\\^]2|x\*\*2)|(x[\^\\^]2|x\*\*2).*(x[\^\\^]4|x\*\*4)/;
+  return highDegreePattern.test(combined) || biquadraticPattern.test(combined);
+}
+
+/**
  * Main solve function - orchestrates the entire pipeline
  */
 export async function solveProblem(request: SolveRequest): Promise<SolveResponse> {
@@ -49,12 +62,16 @@ export async function solveProblem(request: SolveRequest): Promise<SolveResponse
     const classification = await classifyProblem(extracted.latex, extracted.text);
     console.log("Classification:", classification);
 
-    // Step 3: Decide solver based on classification
+    // Step 3: Decide solver based on classification and polynomial detection
     let solution: MathSolution | SymbolicSolution;
     let solverUsed: "openai" | "wolfram" = "openai";
     let graphUrl: string | undefined;
 
-    if (classification.requires_symbolic_solver) {
+    // Force Wolfram for high-degree polynomials (degree >= 3)
+    const forceWolfram = isHighDegreePolynomial(extracted.latex, extracted.text);
+    const useWolfram = classification.requires_symbolic_solver || forceWolfram;
+
+    if (useWolfram) {
       // Use Wolfram Alpha for symbolic solving
       try {
         solution = await solveSymbolic(extracted.latex, extracted.text);

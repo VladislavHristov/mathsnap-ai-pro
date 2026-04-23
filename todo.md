@@ -92,3 +92,13 @@
 - [x] Test classification performance
 - [x] Test solving performance
 - [x] Compare results quality with previous implementation
+
+## Polynomial Accuracy Fix (April 23, 2026)
+- [x] Enhanced OpenAI solver prompt with polynomial-specific instructions
+- [x] Added biquadratic equation handling (y = x² substitution)
+- [x] Updated classifier to mark all degree >= 3 polynomials as requiring symbolic solver
+- [x] Implemented polynomial detection in solver service (forces Wolfram Alpha)
+- [x] Created comprehensive test for x⁴ - 10x² + 9 = 0 polynomial
+- [x] Verified solution accuracy: x = 3, x = -3, x = 1, x = -1 ✓
+- [x] All steps include verification by substitution back into original equation
+- [x] Bulgarian language output with clear step-by-step explanations
